@@ -1,5 +1,5 @@
 ; Notre Problem Pursuit Evasion
 
-(define (problem blocks_probleme)
+(define (problem pursuit-evasion)
     ; To Do
 )
