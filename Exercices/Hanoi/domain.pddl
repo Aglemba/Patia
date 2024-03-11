@@ -5,9 +5,8 @@
 (define (domain hanoi)
 	; strips : probleme simple / typing : types des objets
 	(:requirements :strips :typing)
-	(:types
-		object stack
-	)
+	(:types object stack)
+
 	(:predicates
 		; on empile le object x sur le object y
 		(on ?x - object ?y - object)
@@ -20,8 +19,7 @@
 		; le bras tient un object
 		(holding ?x - object)
 		; le object x est plus petit que le object y
-		(smaller ?x - object ?y - object)
-	)
+		(smaller ?x - object ?y - object))
 
 	; Recuperation du object x sur la pile p
 	(:action pick-up
@@ -31,8 +29,7 @@
 			(clear ?p)
 			(not (clear ?x))
 			(not (handempty))
-			(not (onstack ?x ?p)))
-	)
+			(not (onstack ?x ?p))))
 
 	; Depose le object x sur la pile p
 	(:action put-down
@@ -42,8 +39,7 @@
 			(not (clear ?p))
 			(clear ?x)
 			(handempty)
-			(onstack ?x ?p))
-	)
+			(onstack ?x ?p)))
 
 	; Empile le object x sur le object y
 	(:action stack
@@ -53,8 +49,7 @@
 			(not (clear ?y))
 			(clear ?x)
 			(handempty)
-			(on ?x ?y))
-	)
+			(on ?x ?y)))
 
 	; Depile le object x depuis le object y
 	(:action unstack
@@ -64,6 +59,5 @@
 			(not (clear ?x))
 			(not (handempty))
 			(holding ?x)
-			(clear ?y))
-	)
+			(clear ?y)))
 )
