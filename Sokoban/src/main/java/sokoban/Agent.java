@@ -8,10 +8,13 @@ import fr.uga.pddl4j.planners.PlannerConfiguration;
 import fr.uga.pddl4j.planners.statespace.HSP;
 import fr.uga.pddl4j.problem.operator.Action;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 
 public class Agent {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         // The path to the benchmarks directory
         final String benchmarks = "pddl/";
         final String tests = "config/";
@@ -53,6 +56,11 @@ public class Agent {
             System.out.println("No Plan Found!");
             e.printStackTrace();
         }
+        BufferedWriter out = new BufferedWriter(new FileWriter("pddl/plan_moves.txt"));
+        for(char c: solution.toString().toCharArray()) {
+            out.write(c);
+        }
+        out.close();
 
         for (char c : solution.toString().toCharArray()) System.out.println(c);
     }
