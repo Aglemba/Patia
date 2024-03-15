@@ -68,9 +68,13 @@ Pour compiler et exécuter le sokoban, il suffit de ce placer dans le répertoir
 cd Sokoban
 ```
 
-Ensuite, il suffit de taper la commande suivante :
+Ensuite, il faut taper la commande suivante :
 ```bash
-./makeSokoban.sh
+./run.sh <nom_du_test>
 ```
+
+Puis, ouvrir le lien suivant:
+
+http://localhost:8888/test.html
 
 ([voir le contenu du make Sokoban](/Sokoban/makeSokoban.sh))
