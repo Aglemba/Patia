@@ -1,5 +1,6 @@
 package sokoban;
 
+
 import fr.uga.pddl4j.heuristics.state.StateHeuristic;
 import fr.uga.pddl4j.plan.Plan;
 import fr.uga.pddl4j.planners.LogLevel;
@@ -7,14 +8,14 @@ import fr.uga.pddl4j.planners.Planner;
 import fr.uga.pddl4j.planners.PlannerConfiguration;
 import fr.uga.pddl4j.planners.statespace.HSP;
 import fr.uga.pddl4j.problem.operator.Action;
+import org.example.Main;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
 
 public class Agent {
     public static void main(String[] args) throws IOException {
+<<<<<<< HEAD
         // The path to the benchmarks directory
 
         final Boolean isAli = true;
@@ -63,17 +64,28 @@ public class Agent {
                 } else if (a.getName().contains("down")) {
                     solution.append("D");
                 }
+=======
+        org.example.Main.main(args);
+
+        try (BufferedReader solution = new BufferedReader(new FileReader("pddl/plan_moves.txt"))){
+            String line;
+            while ((line = solution.readLine()) != null) {
+                System.out.println(line);
+>>>>>>> 5d2932a (Ajout SokobanSolver)
             }
-        } catch (Exception e) {
-            System.out.println("No Plan Found!");
+        } catch (IOException e) {
             e.printStackTrace();
+<<<<<<< HEAD
         }
         BufferedWriter out = new BufferedWriter(new FileWriter(AliPath + "pddl/plan_moves.txt"));
         for(char c: solution.toString().toCharArray()) {
             out.write(c);
         }
         out.close();
+=======
+>>>>>>> 5d2932a (Ajout SokobanSolver)
 
-        for (char c : solution.toString().toCharArray()) System.out.println(c);
+        }
+
     }
 }
