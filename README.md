@@ -45,7 +45,7 @@ Pour compiler et exécuter les exercices, il suffit de ce placer dans le répert
 cd Exercices
 ```
 
-Ensuite, il suffit de taper la commande suivante en remplaçant `[NomDuProblème]` par le nom du problème souhaité et `[NuméroDuProblème]` par le numéro du problème.
+Ensuite, il suffit de taper la commande suivante en remplaçant `[NomDuProblème]` par le nom du problème souhaité et `(NuméroDuProblème)` par le numéro du problème.
 Si aucun numéro de problème n'est renseigné, le problème `NotreProbleme` sera executé par défaut :
 ```bash
 ./make.sh [NomDuProblème] (NuméroDuProblème)

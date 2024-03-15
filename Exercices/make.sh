@@ -2,7 +2,7 @@
 #
 # Blocksworld
 # Hanoi
-# N-Puzzle : TODO
+# NPuzzle : TODO
 # GraphColoring
 # PursuitEvasion : TODO
 
