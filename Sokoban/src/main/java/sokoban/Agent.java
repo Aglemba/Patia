@@ -1,6 +1,5 @@
 package sokoban;
 
-
 import fr.uga.pddl4j.heuristics.state.StateHeuristic;
 import fr.uga.pddl4j.plan.Plan;
 import fr.uga.pddl4j.planners.LogLevel;
