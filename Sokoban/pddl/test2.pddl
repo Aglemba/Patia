@@ -121,8 +121,7 @@ agent1 - agent
 )
 
 (:goal
-(
-and
+(and
 (isBoxOnGoal box1)
 (isBoxOnGoal box2)
 (isBoxOnGoal box3)
