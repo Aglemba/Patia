@@ -13,16 +13,12 @@ public class JsonToPddlParser {
     private static int nextUniqueNodeValue = 1;
     private static int nextUniqueBoxValue = 1;
     private static int nextUniqueAgentValue = 1;
-    private static String headers = "";
-    private static String objects = ":objects\n";
+    private static StringBuilder headers = new StringBuilder();
+    private static StringBuilder objects = new StringBuilder(":objects\n");
+    private static StringBuilder inits = new StringBuilder(":init\n");
+    private static StringBuilder goals = new StringBuilder(":goal\n(and\n");
+    private static StringBuilder output = new StringBuilder();
 
-    private static String inits = ":init\n";
-
-    private static String goals = ":goal\n"
-            + "(\n"
-            + "and\n";
-
-    private static String output = "";
 
     public ArrayList<ArrayList<String>> createUniqueValueMatrix(ArrayList<ArrayList<Character>> originalMatrix) {
         ArrayList<ArrayList<String>> uniqueValueMatrix = new ArrayList<>();
@@ -50,19 +46,19 @@ public class JsonToPddlParser {
     private String generateUniqueNode() {
         String newNode = "node" + nextUniqueNodeValue++;
         nodes.add(newNode);
-        objects += newNode + " - node\n";
+        objects.append(newNode).append(" - node\n");
         return newNode;
     }
 
     private String generateUniqueBox() {
         String newBox = "box" + nextUniqueBoxValue++;
-        objects += newBox + " - box\n";
+        objects.append(newBox).append(" - box\n");
         return newBox;
     }
 
     private String generateUniqueAgent() {
         String newAgent = "agent" + nextUniqueAgentValue++;
-        objects += newAgent + " - agent\n";
+        objects.append(newAgent).append(" - agent\n");
         return newAgent;
     }
 
@@ -100,73 +96,59 @@ public class JsonToPddlParser {
 
                 if (originalValue == '$') {
                     String newBox = generateUniqueBox();
-                    inits += "(isBoxOnNode " + newBox + " " + currentNode + ")\n";
-                    inits += "(isNotBoxOnGoal " + newBox + ")\n";
-                    inits += "(isBusyNode " + currentNode + ")\n";
-                    goals += "(isBoxOnGoal " + newBox + ")\n";
+                    inits.append("(isBoxOnNode ").append(newBox).append(" ").append(currentNode).append(")\n");
+                    inits.append("(isNotBoxOnGoal ").append(newBox).append(")\n");
+                    inits.append("(isBusyNode ").append(currentNode).append(")\n");
+                    goals.append("(isBoxOnGoal ").append(newBox).append(")\n");
                 } else if (originalValue == '@') {
                     String newAgent = generateUniqueAgent();
-                    inits += "(isAgentOnNode " + newAgent + " " + currentNode + ")\n";
-                    inits += "(isNotBusyNode " + currentNode + ")\n";
+                    inits.append("(isAgentOnNode ").append(newAgent).append(" ").append(currentNode).append(")\n");
+                    inits.append("(isNotBusyNode ").append(currentNode).append(")\n");
                 }  else if (originalValue == '.') {
-                    inits += "(isGoalNode " + currentNode + ")\n";
-                    inits += "(isNotBusyNode " + currentNode + ")\n";
+                    inits.append("(isGoalNode ").append(currentNode).append(")\n");
+                    inits.append("(isNotBusyNode ").append(currentNode).append(")\n");
                 } else if (originalValue == '*') {
                     String newBox = generateUniqueBox();
-                    inits += "(isBoxOnNode " + newBox + " " + currentNode + ")\n";
-                    inits += "(isNotBoxOnGoal " + newBox + ")\n";
-                    inits += "(isGoalNode " + currentNode + ")\n";
-                    inits += "(isBusyNode " + currentNode + ")\n";
-                    goals += "(isBoxOnGoal " + newBox + ")\n";
+                    inits.append("(isBoxOnNode ").append(newBox).append(" ").append(currentNode).append(")\n");
+                    inits.append("(isNotBoxOnGoal ").append(newBox).append(")\n");
+                    inits.append("(isGoalNode ").append(currentNode).append(")\n");
+                    inits.append("(isBusyNode ").append(currentNode).append(")\n");
+                    goals.append("(isBoxOnGoal ").append(newBox).append(")\n");
                 } else if (originalValue == '+') {
                     String newAgent = generateUniqueAgent();
-                    inits += "(isAgentOnNode " + newAgent + " " + currentNode + ")\n";
-                    inits += "(isNotBusyNode " + currentNode + ")\n";
-                    inits += "(isGoalNode " + currentNode + ")\n";
+                    inits.append("(isAgentOnNode ").append(newAgent).append(" ").append(currentNode).append(")\n");
+                    inits.append("(isNotBusyNode ").append(currentNode).append(")\n");
+                    inits.append("(isGoalNode ").append(currentNode).append(")\n");
                 } else {
-                    inits += "(isNotBusyNode " + currentNode + ")\n";
+                    inits.append("(isNotBusyNode ").append(currentNode).append(")\n");
                 }
 
                 if (i > 0) {
                     String aboveNode = uniqueValueMatrix.get(i - 1).get(j);
                     if (aboveNode.startsWith("node")) {
-                        inits += "(isNodesConnected " + currentNode + " " + aboveNode + ")\n";
-                        inits += "(isBelow " + currentNode + " " + aboveNode + ")\n";
+                        inits.append("(isBelow ").append(currentNode).append(" ").append(aboveNode).append(")\n");
                     }
                 }
 
                 if (i < numRows - 1) {
                     String belowNode = uniqueValueMatrix.get(i + 1).get(j);
                     if (belowNode.startsWith("node")) {
-                        inits += "(isNodesConnected " + currentNode + " " + belowNode + ")\n";
-                        inits += "(isAbove " + currentNode + " " + belowNode + ")\n";
+                        inits.append("(isAbove ").append(currentNode).append(" ").append(belowNode).append(")\n");
                     }
                 }
 
                 if (j > 0) {
                     String leftNode = uniqueValueMatrix.get(i).get(j - 1);
                     if (leftNode.startsWith("node")) {
-                        inits += "(isNodesConnected " + currentNode + " " + leftNode + ")\n";
-                        inits += "(isOnRight " + currentNode + " " + leftNode + ")\n";
+                        inits.append("(isOnRight ").append(currentNode).append(" ").append(leftNode).append(")\n");
                     }
                 }
 
                 if (j < numCols - 1) {
                     String rightNode = uniqueValueMatrix.get(i).get(j + 1);
                     if (rightNode.startsWith("node")) {
-                        inits += "(isNodesConnected " + currentNode + " " + rightNode + ")\n";
-                        inits += "(isOnLeft " + currentNode + " " + rightNode + ")\n";
+                        inits.append("(isOnLeft ").append(currentNode).append(" ").append(rightNode).append(")\n");
                     }
-                }
-            }
-        }
-
-        for (int i = 0; i < nodes.size(); i++) {
-            for (int j = 0; j < nodes.size(); j++) {
-                if (i != j) {
-                    String node1 = nodes.get(i);
-                    String node2 = nodes.get(j);
-                    inits += "(isDifferentNode " + node1 + " " + node2 + ")\n";
                 }
             }
         }
@@ -189,13 +171,12 @@ public class JsonToPddlParser {
             String jsonFileName = new File(jsonFilePath).getName();
             String outputFilePath = "pddl/" + jsonFileName.replace(".json", ".pddl");
 
-            headers = "(define (problem " + jsonFileName.replace(".json", "") + ")\n" +
-                    "(:domain domain_sokoban)\n";
+            headers.append("(define (problem ").append(jsonFileName.replace(".json", "")).append(")\n").append("(:domain domain_sokoban)\n");
 
-            output = headers + "(" + objects + ")\n\n" + "(" + inits + ")\n\n" + "(" + goals + ")\n)\n" + ")";
+            output.append(headers).append("(").append(objects).append(")\n\n").append("(").append(inits).append(")\n\n").append("(").append(goals).append(")\n)\n").append(")");
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath))) {
-                writer.write(output);
+                writer.write(String.valueOf(output));
                 System.out.println("Output saved to: " + outputFilePath);
             } catch (IOException e) {
                 e.printStackTrace();

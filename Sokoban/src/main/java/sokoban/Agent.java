@@ -18,7 +18,7 @@ public class Agent {
         // The path to the benchmarks directory
         final String benchmarks = "pddl/";
         final String tests = "config/";
-        final String testName = "test1";
+        final String testName = "test24";
 
         PlannerConfiguration config = HSP.getDefaultConfiguration();
         config.setProperty(HSP.DOMAIN_SETTING, benchmarks + "domain.pddl");
