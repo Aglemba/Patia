@@ -39,12 +39,13 @@
             <version>${gamengine.version}</version>
         </dependency>
 
+        <!-- Add pddl4j-4.0.0 -->
         <dependency>
-          <groupId>fr.uga</groupId>
-          <artifactId>pddl4j</artifactId>
-          <version>4.0.0</version>
+            <groupId>fr.uga</groupId>
+            <artifactId>pddl4j</artifactId>
+            <version>4.0.0</version>
         </dependency>
-
+        
     </dependencies>
 
     <build>

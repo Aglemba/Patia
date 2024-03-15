@@ -16,15 +16,27 @@ import java.util.List;
 public class Agent {
     public static void main(String[] args) throws IOException {
         // The path to the benchmarks directory
-        final String benchmarks = "pddl/";
-        final String tests = "config/";
-        final String testName = "test24";
+
+        final Boolean isAli = true;
+        final String AliPath;
+
+        if(isAli) {
+            AliPath = "";
+        } else {
+            AliPath = "Sokoban/";
+        }
+
+        final String benchmarks = AliPath + "pddl/";
+        final String tests = AliPath + "config/";
+        final String testName = "test3";
+
+        
 
         PlannerConfiguration config = HSP.getDefaultConfiguration();
         config.setProperty(HSP.DOMAIN_SETTING, benchmarks + "domain.pddl");
 
         JsonToPddlParser parser = new JsonToPddlParser();
-
+        System.out.println("CHEMINS : " + tests + testName + ".json");
         parser.parse(tests + testName + ".json");
 
         config.setProperty(HSP.PROBLEM_SETTING, benchmarks + testName + ".pddl");
@@ -56,7 +68,7 @@ public class Agent {
             System.out.println("No Plan Found!");
             e.printStackTrace();
         }
-        BufferedWriter out = new BufferedWriter(new FileWriter("pddl/plan_moves.txt"));
+        BufferedWriter out = new BufferedWriter(new FileWriter(AliPath + "pddl/plan_moves.txt"));
         for(char c: solution.toString().toCharArray()) {
             out.write(c);
         }
