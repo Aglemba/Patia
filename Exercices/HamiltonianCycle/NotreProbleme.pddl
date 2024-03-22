@@ -8,6 +8,7 @@
     II - arc
     III - arc
     IV - arc
+    V - arc
     VI - arc
     VII - arc
     s - stack
@@ -22,20 +23,15 @@
     (isConnected D C IV)
     (isConnected D A VI)
     (isConnected A D VI)
-    (hasNotPassedOnArc I)
-    (hasNotPassedOnArc II)
-    (hasNotPassedOnArc III)
-    (hasNotPassedOnArc IV)
-    (hasNotPassedOnArc VI)
-    (hasNotPassedOnArc VII)
+    (isConnected B D V)
+    (isConnected D B V)
+    (hasNotPassedOnNode B)
+    (hasNotPassedOnNode C)
+    (hasNotPassedOnNode D)
     (isOnNode A)
-    (isOnStack s I)
-    (isOnStack s II)
-    (isOnStack s III)
-    (isOnStack s IV)
-
-    (isOnStack s VI)
-    (isOnStack s VII)
+    (isOnStack s B)
+    (isOnStack s C)
+    (isOnStack s D)
     (stackIsFilled s)
 )
 

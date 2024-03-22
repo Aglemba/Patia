@@ -12,10 +12,10 @@
 
 (:predicates 
     (isConnected ?n1 - node ?n2 - node ?a - arc)
-    (hasPassedOnArc ?a - arc)
-    (hasNotPassedOnArc ?a - arc)
+    (hasPassedOnNode ?n - node)
+    (hasNotPassedOnNode ?n - node)
     (isOnNode ?n1 - node)
-    (isOnStack ?s - stack ?a - arc)
+    (isOnStack ?s - stack ?n - node)
     (stackIsFilled ?s - stack)
     (isHamiltonianCycle ?s - stack) 
 )
@@ -25,22 +25,22 @@
     :precondition (and 
         (isConnected ?n1 ?n2 ?a)
         (isOnNode ?n1)
-        (hasNotPassedOnArc ?a)
+        (hasNotPassedOnNode ?n2)
         (stackIsFilled ?s)
-        (isOnStack ?s ?a)
+        (isOnStack ?s ?n2)
     )
     :effect (and 
         (isOnNode ?n2)
         (not (isOnNode ?n1))
-        (not (hasNotPassedOnArc ?a))
-        (hasPassedOnArc ?a)
-        (not (isOnStack ?s ?a))
+        (not (hasNotPassedOnNode ?n2))
+        (hasPassedOnNode ?n2)
+        (not (isOnStack ?s ?n2))
     )
 )
 (:action unstack
-    :parameters (?s - stack ?a - arc)
+    :parameters (?s - stack ?n - node)
     :precondition (and 
-        (forall (?a) (not (isOnStack ?s ?a)))
+        (forall (?n) (not (isOnStack ?s ?n)))
     )
     :effect (and 
         (isHamiltonianCycle ?s)
