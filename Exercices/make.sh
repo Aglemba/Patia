@@ -6,6 +6,7 @@
 # GraphColoring
 # PursuitEvasion : TODO
 # MachineDeTuring
+# SatSolver
 
 # HSP = optimal / FF = sous-optimal
 java -cp pddl4j/pddl4j-4.0.0.jar fr.uga.pddl4j.planners.statespace.HSP \
