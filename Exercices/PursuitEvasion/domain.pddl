@@ -3,11 +3,11 @@
     (:requirements :strips :typing)
     (:types 
         node 
-		agent
+	agent
     )
 
     (:predicates 
-	    (isDifferentAgent ?x ?y - agent)
+	(isDifferentAgent ?x ?y - agent)
         (isConnected ?x ?y - node)
         (isOnNode ?x - node ?y - agent)
         (isCovered ?x - node)
