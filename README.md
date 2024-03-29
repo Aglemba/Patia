@@ -25,6 +25,7 @@ Avril 2024 - M1 INFO - IM2AG
 - [Sokoban](#Sokoban)
     - [Compiler / Executer](#Compiler-/-Exécuter-le-Sokoban)
 - [SAT Planning](#SAT-Planning)
+    - [Compiler / Executer](#Compiler-/-Exécuter-le-Sat)
 
 
 ## Exercices
@@ -32,10 +33,13 @@ Avril 2024 - M1 INFO - IM2AG
 ### Liste des exercices
 
 - Blocksworld
-- GraphColoring
 - Hanoi
-- N-Puzzle
+- NPuzzle
+- HamiltonianCycle
+- GraphColoring
 - PursuitEvasion
+- MachineDeTuring
+- SatSolver
 
 
 ### >>> Compiler / Exécuter les exercices
@@ -46,6 +50,7 @@ cd Exercices
 ```
 
 Ensuite, il suffit de taper la commande suivante en remplaçant `[NomDuProblème]` par le nom du problème souhaité et `(NuméroDuProblème)` par le numéro du problème.
+
 Si aucun numéro de problème n'est renseigné, le problème `NotreProbleme` sera executé par défaut :
 ```bash
 ./make.sh [NomDuProblème] (NuméroDuProblème)
