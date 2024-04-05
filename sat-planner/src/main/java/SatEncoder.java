@@ -38,9 +38,9 @@ public class SatEncoder extends AbstractPlanner {
 
     private static final Logger LOGGER = LogManager.getLogger(SatEncoder.class.getName());
 
-    private final int VAR_COUNT = 1000;
+    private final int VAR_COUNT = 100000;
 
-    private final int CLAUSE_COUNT = 1000;
+    private final int CLAUSE_COUNT = 100000;
 
     private final long MAX_TIMER = 10 * 60 * 1000; // 10 minutes in milliseconds
 
@@ -150,8 +150,9 @@ public class SatEncoder extends AbstractPlanner {
         clause[1] = -fluentNext;
 
         // Populate the clause with the indices of actions affecting the fluent
-        for (int i = 0; i < actionList.size(); i++)
+        for (int i = 0; i < actionList.size(); i++) {
             clause[i + 2] = actionList.get(i);
+        }
 
         // Return the created clause
         return clause;
@@ -200,16 +201,19 @@ public class SatEncoder extends AbstractPlanner {
                     // Find actions affecting the fluent in the next time step
                     for (SatVariable action : satVariables) {
                         if (action.getStep() == timeStep && !action.isFluent()) {
-                            for (int affectedF : action.getPositiveEffects())
+                            for (int affectedF : action.getPositiveEffects()) {
                                 if (affectedF == fluentNext) {
                                     actionWithPosEffect.add(action.getName());
                                     break;
                                 }
-                            for (int affectedF : action.getNegativeEffects())
+                            }
+
+                            for (int affectedF : action.getNegativeEffects()) {
                                 if (affectedF == fluentNext) {
                                     actionWithNegEffect.add(action.getName());
                                     break;
                                 }
+                            }
                         }
                     }
 
@@ -250,7 +254,7 @@ public class SatEncoder extends AbstractPlanner {
         // Iterate over each fluent
         for (int i = 1; i <= fluents.size(); i++) {
             // Calculate the index of the fluent in the last step
-            int fluentIndex = i + (variableSize * (stepCount - 1));
+            int fluentIndex = i + (variableSize * (stepCount));
 
             // If the fluent is present in the goal state, add it to the clause
             if (goalState.get(i - 1)) {
@@ -264,46 +268,26 @@ public class SatEncoder extends AbstractPlanner {
     }
 
     /**
-     * Adds transition clauses to the solver.
-     *
-     * @param solver            The SAT solver instance.
-     * @param transitionClauses List of transition clauses.
-     */
-    private void addTransitionClauses(ISolver solver, ArrayList<int[]> transitionClauses) {
-        // Iterate over each transition clause
-        for (int[] clause : transitionClauses) {
-            try {
-                // Check if the clause is non-empty
-                if (clause.length > 0) {
-                    // Convert the clause to VecInt and add it to the solver
-                    VecInt v = new VecInt(clause);
-                    solver.addClause(v);
-                }
-            } catch (ContradictionException e) {
-                // Log a warning if there's an error while adding clauses
-                LOGGER.warn("Error while adding transition clauses!");
-            }
-        }
-    }
-
-    /**
-     * Adds goal clauses to the solver.
+     * Adds clauses to the SAT solver.
      *
      * @param solver      The SAT solver instance.
-     * @param goalClauses List of goal clauses.
+     * @param clauses     List of clauses to add.
      */
-    private void addGoalClauses(ISolver solver, ArrayList<int[]> goalClauses) {
-        // Iterate over each goal clause
-        for (int[] clause : goalClauses) {
+    private void addClauses(ISolver solver, ArrayList<int[]> clauses) {
+        // Iterate over each clause
+        for (int[] clause : clauses) {
             try {
                 // Check if the clause is non-empty
                 if (clause.length > 0) {
                     // Add the clause to the solver
                     solver.addClause(new VecInt(clause));
+                } else {
+                    // Log a message if the clause has an invalid format
+                    LOGGER.info("Clause with invalid format!");
                 }
             } catch (ContradictionException e) {
                 // Log a warning if there's an error while adding clauses
-                LOGGER.warn("Error while creating goal clauses!");
+                LOGGER.warn("Error while adding clauses!");
             }
         }
     }
@@ -335,31 +319,6 @@ public class SatEncoder extends AbstractPlanner {
 
         // Return the list of initial clauses
         return initClauses;
-    }
-
-    /**
-     * Adds initial clauses to the SAT solver.
-     *
-     * @param solver       The SAT solver instance.
-     * @param initClauses  List of initial clauses.
-     */
-    private void addInitialClauses(ISolver solver, ArrayList<int[]> initClauses) {
-        // Iterate over each initial clause
-        for (int[] clause : initClauses) {
-            try {
-                // Check if the clause is non-empty
-                if (clause.length > 0) {
-                    // Add the clause to the solver
-                    solver.addClause(new VecInt(clause));
-                } else {
-                    // Log a message if the clause has an invalid format
-                    LOGGER.info("Clause with invalid format!");
-                }
-            } catch (ContradictionException e) {
-                // Log a warning if there's an error while initializing clauses
-                LOGGER.warn("Error while initializing clauses!");
-            }
-        }
     }
 
     /**
@@ -396,6 +355,7 @@ public class SatEncoder extends AbstractPlanner {
         int variableSize = fluents.size() + actions.size();
 
         createSATVariables(fluents, actions, stepCount, variables);
+
         BitVector goalState = problem.getGoal().getPositiveFluents();
 
         ArrayList<int[]> initClauses = getInitClauses(problem, variables);
@@ -418,9 +378,9 @@ public class SatEncoder extends AbstractPlanner {
             goalClauses = encodeGoalState(fluents, goalState, variableSize, stepCount);
 
             // Add clauses to the solver
-            addInitialClauses(solver, initClauses);
-            addTransitionClauses(solver, transitionClauses);
-            addGoalClauses(solver, goalClauses);
+            addClauses(solver, initClauses);
+            addClauses(solver, transitionClauses);
+            addClauses(solver, goalClauses);
 
             try {
                 // Check if the solver found a satisfying assignment
