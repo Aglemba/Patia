@@ -350,16 +350,17 @@ public class SatEncoder extends AbstractPlanner {
         int stepCount = calculateEstimation(problem);
         ArrayList<Fluent> fluents = new ArrayList<>(problem.getFluents());
         ArrayList<Action> actions = new ArrayList<>(problem.getActions());
+        ArrayList<int[]> transitionClauses = new ArrayList<>();
         ArrayList<SatVariable> variables = new ArrayList<>();
 
         int variableSize = fluents.size() + actions.size();
 
         createSATVariables(fluents, actions, stepCount, variables);
+        generateTransitionClauses(variables, transitionClauses, stepCount, variableSize);
 
         BitVector goalState = problem.getGoal().getPositiveFluents();
 
         ArrayList<int[]> initClauses = getInitClauses(problem, variables);
-        ArrayList<int[]> transitionClauses = new ArrayList<>();
         ArrayList<int[]> goalClauses;
 
         // Start the search timer
