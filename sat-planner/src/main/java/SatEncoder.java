@@ -63,7 +63,7 @@ public class SatEncoder extends AbstractPlanner {
      * Each proposition has a unique integer associated with its time step.
      * For example: Move(A,B,0) = 1, Move(A,B,1) = 5, etc.
      *
-     * @param fluents       List of fluents representing initial states.
+     * @param fluents       List of fluents representing initial states. (Liste des perdicats)
      * @param actions       List of actions available.
      * @param timeStep     Number of time steps.
      * @param existingVariables   List of previously created SAT variables.
@@ -154,6 +154,42 @@ public class SatEncoder extends AbstractPlanner {
         }
 
         return initClauses;
+    }
+
+    private ArrayList<int[]> getTransitionClauses(Problem problem, ArrayList<SatVariable> variables) {
+        ArrayList<int[]> transitionClauses = new ArrayList<>();
+        ArrayList<SatTransition> transitions = new ArrayList<>();
+
+        for (SatVariable v : variables) {
+            if (!v.isFluent()) {
+                SatTransition transition = new SatTransition(v.getStep());
+                transition.addPrecondition(v.getPreconditions());
+                transition.addPositiveEffect(v.getPositiveEffects());
+                transition.addNegativeEffect(v.getNegativeEffects());
+                transitions.add(transition);
+            }
+        }
+
+        for (SatTransition t : transitions) {
+            int step = t.getStep();
+            ArrayList<Integer> preconditions = t.getPreconditions();
+            ArrayList<Integer> positiveEffects = t.getPositiveEffects();
+            ArrayList<Integer> negativeEffects = t.getNegativeEffects();
+
+            for (int precondition : preconditions) {
+                for (int positiveEffect : positiveEffects) {
+                    int[] clause = { -precondition, positiveEffect };
+                    transitionClauses.add(clause);
+                }
+
+                for (int negativeEffect : negativeEffects) {
+                    int[] clause = { -precondition, negativeEffect };
+                    transitionClauses.add(clause);
+                }
+            }
+        }
+
+        return transitionClauses;
     }
 
     /**
