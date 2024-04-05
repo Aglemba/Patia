@@ -17,8 +17,8 @@ public class SatVariable {
         this.name = name;
         this.isFluent = isFluent;
         this.preconditions = new ArrayList<>();
-        positiveEffects = new ArrayList<>();
-        negativeEffects = new ArrayList<>();
+        this.positiveEffects = new ArrayList<>();
+        this.negativeEffects = new ArrayList<>();
     }
 
     public void addPrecondition(int precondition) {
@@ -31,6 +31,30 @@ public class SatVariable {
 
     public void addNegativeEffect(int negativeEffect) {
         this.negativeEffects.add(negativeEffect);
+    }
+
+    public int getStep() {
+        return step;
+    }
+
+    public int getName() {
+        return name;
+    }
+
+    public boolean isFluent() {
+        return isFluent;
+    }
+
+    public ArrayList<Integer> getPositiveEffects() {
+        return positiveEffects;
+    }
+
+    public ArrayList<Integer> getNegativeEffects() {
+        return negativeEffects;
+    }
+
+    public ArrayList<Integer> getPreconditions() {
+        return preconditions;
     }
 
     @Override

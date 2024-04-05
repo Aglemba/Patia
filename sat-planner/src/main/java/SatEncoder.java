@@ -10,6 +10,8 @@ import fr.uga.pddl4j.problem.Problem;
 import fr.uga.pddl4j.problem.State;
 import fr.uga.pddl4j.problem.operator.Action;
 import fr.uga.pddl4j.util.BitVector;
+import org.sat4j.minisat.SolverFactory;
+import org.sat4j.specs.ISolver;
 import picocli.CommandLine;
 import java.util.ArrayList;
 import org.apache.logging.log4j.Logger;
@@ -59,7 +61,7 @@ public class SatEncoder extends AbstractPlanner {
     /**
      * Transform the propositions and actions to SAT variables, mapping them to unique integers.
      * Each proposition has a unique integer associated with its time step.
-     * For example: Move(A,B, 0) = 1, Move(A,B, 1) = 5, etc.
+     * For example: Move(A,B,0) = 1, Move(A,B,1) = 5, etc.
      *
      * @param fluents       List of fluents representing initial states.
      * @param actions       List of actions available.
@@ -134,6 +136,39 @@ public class SatEncoder extends AbstractPlanner {
     }
 
     /**
+     * Retrieves the initial clauses based on the given problem and list of sat variables.
+     *
+     * @param problem    The problem instance containing initial state information.
+     * @return           A list of initial clauses represented as arrays of integers.
+     */
+    private ArrayList<int[]> getInitClauses(Problem problem, ArrayList<SatVariable> variables) {
+        ArrayList<int[]> initClauses = new ArrayList<>();
+        BitVector initState = problem.getInitialState().getPositiveFluents();
+
+        for (SatVariable v : variables) {
+            if (v.getStep() == 0 && v.isFluent()) {
+                int varName = v.getName();
+                int[] clause = { initState.get(varName - 1) ? varName : -varName };
+                initClauses.add(clause);
+            }
+        }
+
+        return initClauses;
+    }
+
+    /**
+     * Calculates the estimation of the minimum number of steps required to reach the goal state from the initial state.
+     *
+     * @param problem The problem instance for which the estimation is calculated.
+     * @return An estimation of the minimum number of steps required to reach the goal state from the initial state.
+     */
+    int calculateEstimation(Problem problem) {
+        FastForward ff = new FastForward(problem);
+        State init = new State(problem.getInitialState());
+        return ff.estimate(init, problem.getGoal());
+    }
+
+    /**
      * Search a solution plan to a specified domain and problem using SAT.
      *
      * @param problem the problem to solve.
@@ -144,17 +179,30 @@ public class SatEncoder extends AbstractPlanner {
         LOGGER.info("* Starting SAT search \n");
 
         boolean solved = false;
-        FastForward ff = new FastForward(problem);
-        State init = new State(problem.getInitialState());
-        int estimation = ff.estimate(init, problem.getGoal());
 
+        int estimation = calculateEstimation(problem);
         System.out.println(estimation);
 
         ArrayList<Fluent> fluents = new ArrayList<>(problem.getFluents());
         ArrayList<Action> actions = new ArrayList<>(problem.getActions());
-
         ArrayList<SatVariable> variables = createSATVariables(fluents, actions, estimation, new ArrayList<>());
-        System.out.println(variables);
+        BitVector goalState = problem.getGoal().getPositiveFluents();
+
+        ArrayList<int[]> initClauses = getInitClauses(problem, variables);
+        ArrayList<int[]> transitionClauses = new ArrayList<>();
+        ArrayList<int[]> goalClauses = new ArrayList<>();
+
+        System.out.println(initClauses);
+
+//        while (!solved) {
+//
+//            ISolver solver = SolverFactory.newDefault();
+//            solver.newVar(1000000);
+//            solver.setExpectedNumberOfClauses(500000);
+//
+//            variables = createSATVariables(fluents, actions, estimation, variables);
+//
+//        }
 
         return null;
     }
