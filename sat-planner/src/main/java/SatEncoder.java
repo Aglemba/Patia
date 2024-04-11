@@ -17,6 +17,7 @@ import org.sat4j.specs.ISolver;
 import org.sat4j.specs.TimeoutException;
 import picocli.CommandLine;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -149,13 +150,124 @@ public class SatEncoder extends AbstractPlanner {
         clause[0] = fluentName;
         clause[1] = -fluentNext;
 
+        System.out.println("Creating clause for fluent: " + fluentName +
+                " and its negation: " + -fluentNext);
+
         // Populate the clause with the indices of actions affecting the fluent
         for (int i = 0; i < actionList.size(); i++) {
             clause[i + 2] = actionList.get(i);
+            System.out.println("Adding action: " + actionList.get(i) + " to the clause");
         }
+
+        System.out.println("Clause : " + Arrays.toString(clause));
 
         // Return the created clause
         return clause;
+    }
+
+    /**
+     * Handles the generation of action implications for a given time step.
+     *
+     * @param satVariables List of SAT variables.
+     * @param prevClauses  Previous list of clauses.
+     * @param timeStep     The current time step.
+     */
+    private void handleActionImplications(ArrayList<SatVariable> satVariables, ArrayList<int[]> prevClauses, int timeStep) {
+        for (SatVariable action : satVariables) {
+            if (!action.isFluent() && action.getStep() == timeStep) {
+                System.out.println("\n");
+                System.out.println("Handling action: " + action.getName() + " at time step " + action.getStep());
+
+                for (int precondition : action.getPreconditions()) {
+                    System.out.println("Adding precondition clause: -" + action.getName() + " " + precondition);
+                    prevClauses.add(new int[]{-action.getName(), precondition});
+                }
+
+                for (int positiveEffect : action.getPositiveEffects()) {
+                    System.out.println("Adding positive effect clause: -" + action.getName() + " " + positiveEffect);
+                    prevClauses.add(new int[]{-action.getName(), positiveEffect});
+                }
+
+                for (int negativeEffect : action.getNegativeEffects()) {
+                    System.out.println("Adding negative effect clause: -" + action.getName() + " -" + negativeEffect);
+                    prevClauses.add(new int[]{-action.getName(), -negativeEffect});
+                }
+            }
+        }
+        System.out.println("====================\n");
+    }
+
+
+    /**
+     * Handles the generation of state transitions for a given time step.
+     *
+     * @param satVariables    List of SAT variables.
+     * @param prevClauses     Previous list of clauses.
+     * @param timeStep        The current time step.
+     * @param varPerTimeStep Number of variables per time step.
+     */
+    private void handleStateTransition(ArrayList<SatVariable> satVariables, ArrayList<int[]> prevClauses, int timeStep, int varPerTimeStep) {
+        for (SatVariable fluent : satVariables) {
+            if (fluent.isFluent() && fluent.getStep() == timeStep) {
+                System.out.println("\n");
+                int fluentNext = fluent.getName() + varPerTimeStep;
+                ArrayList<Integer> actionWithPosEffect = new ArrayList<>();
+                ArrayList<Integer> actionWithNegEffect = new ArrayList<>();
+
+                System.out.println("Handling fluent: " + fluent.getName() + " at time step " + fluent.getStep());
+
+                // Find actions affecting the fluent in the next time step
+                for (SatVariable action : satVariables) {
+                    if (action.getStep() == timeStep && !action.isFluent()) {
+                        for (int affectedF : action.getPositiveEffects()) {
+                            if (affectedF == fluentNext) {
+                                actionWithPosEffect.add(action.getName());
+                                System.out.println("Action " + action.getName() + " has positive effect on fluent " + fluentNext);
+                                break;
+                            }
+                        }
+
+                        for (int affectedF : action.getNegativeEffects()) {
+                            if (affectedF == fluentNext) {
+                                actionWithNegEffect.add(action.getName());
+                                System.out.println("Action " + action.getName() + " has negative effect on fluent " + fluentNext);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Add clauses representing state changes
+                prevClauses.add(createClause(fluent.getName(), fluentNext, actionWithPosEffect));
+                prevClauses.add(createClause(-fluent.getName(), -fluentNext, actionWithNegEffect));
+            }
+        }
+        System.out.println("====================\n");
+    }
+
+    /**
+     * Handles the generation of action disjunction for a given time step.
+     *
+     * @param satVariables List of SAT variables.
+     * @param prevClauses  Previous list of clauses.
+     * @param timeStep     The current time step.
+     */
+    private void handleActionDisjunction(ArrayList<SatVariable> satVariables, ArrayList<int[]> prevClauses, int timeStep) {
+        ArrayList<Integer> handledActions = new ArrayList<>();
+        for (SatVariable action : satVariables) {
+            if (!action.isFluent() && action.getStep() == timeStep && !handledActions.contains(action.getName())) {
+                System.out.println("\n");
+                System.out.println("Handling action: " + action.getName());
+                for (SatVariable otherAction : satVariables) {
+                    if (!otherAction.isFluent() && otherAction.getStep() == timeStep && action.getName() != otherAction.getName()) {
+                        System.out.println("Adding clause: -" + action.getName() + " -" + otherAction.getName());
+                        prevClauses.add(new int[]{-action.getName(), -otherAction.getName()});
+                    }
+                }
+                handledActions.add(action.getName());
+            }
+        }
+        System.out.println("====================\n");
     }
 
     /**
@@ -174,67 +286,9 @@ public class SatEncoder extends AbstractPlanner {
 
         // Iterate over each time step
         for (int timeStep = startTime; timeStep < lastStep; timeStep++) {
-            // Action implications
-            for (SatVariable action : satVariables) {
-                if (!action.isFluent() && action.getStep() == timeStep) {
-                    for (int precondition : action.getPreconditions()) {
-                        prevClauses.add(new int[]{-action.getName(), precondition});
-                    }
-
-                    for (int positiveEffect : action.getPositiveEffects()) {
-                        prevClauses.add(new int[]{-action.getName(), positiveEffect});
-                    }
-
-                    for (int negativeEffect : action.getNegativeEffects()) {
-                        prevClauses.add(new int[]{-action.getName(), -negativeEffect});
-                    }
-                }
-            }
-
-            // State changes
-            for (SatVariable fluent : satVariables) {
-                if (fluent.isFluent() && fluent.getStep() == timeStep) {
-                    int fluentNext = fluent.getName() + varPerTimeStep;
-                    ArrayList<Integer> actionWithPosEffect = new ArrayList<>();
-                    ArrayList<Integer> actionWithNegEffect = new ArrayList<>();
-
-                    // Find actions affecting the fluent in the next time step
-                    for (SatVariable action : satVariables) {
-                        if (action.getStep() == timeStep && !action.isFluent()) {
-                            for (int affectedF : action.getPositiveEffects()) {
-                                if (affectedF == fluentNext) {
-                                    actionWithPosEffect.add(action.getName());
-                                    break;
-                                }
-                            }
-
-                            for (int affectedF : action.getNegativeEffects()) {
-                                if (affectedF == fluentNext) {
-                                    actionWithNegEffect.add(action.getName());
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    // Add clauses representing state changes
-                    prevClauses.add(createClause(fluent.getName(), fluentNext, actionWithPosEffect));
-                    prevClauses.add(createClause(-fluent.getName(), -fluentNext, actionWithNegEffect));
-                }
-            }
-
-            // Action restriction: only one action can occur at time i
-            ArrayList<Integer> handledActions = new ArrayList<>();
-            for (SatVariable action : satVariables) {
-                if (!action.isFluent() && action.getStep() == timeStep && !handledActions.contains(action.getName())) {
-                    for (SatVariable otherAction : satVariables) {
-                        if (!otherAction.isFluent() && otherAction.getStep() == timeStep && action.getName() != otherAction.getName()) {
-                            prevClauses.add(new int[]{-action.getName(), -otherAction.getName()});
-                        }
-                    }
-                    handledActions.add(action.getName());
-                }
-            }
+            handleActionImplications(satVariables, prevClauses, timeStep);
+            handleStateTransition(satVariables, prevClauses, timeStep, varPerTimeStep);
+            handleActionDisjunction(satVariables, prevClauses, timeStep);
         }
     }
 
@@ -356,7 +410,7 @@ public class SatEncoder extends AbstractPlanner {
         int variableSize = fluents.size() + actions.size();
 
         createSATVariables(fluents, actions, stepCount, variables);
-        generateTransitionClauses(variables, transitionClauses, stepCount, variableSize);
+//        generateTransitionClauses(variables, transitionClauses, stepCount, variableSize);
 
         BitVector goalState = problem.getGoal().getPositiveFluents();
 
@@ -368,6 +422,9 @@ public class SatEncoder extends AbstractPlanner {
 
         // Continue the search until the time limit is reached
         while (System.currentTimeMillis() - searchTimeStart <= MAX_TIMER) {
+
+            System.out.println("\n=====Starting step " + stepCount + "======\n");
+
             // Create a new solver instance
             ISolver solver = SolverFactory.newDefault();
             solver.newVar(VAR_COUNT);
@@ -389,15 +446,15 @@ public class SatEncoder extends AbstractPlanner {
                     Plan plan = new SequentialPlan();
                     int[] solution = solver.findModel();
 
-//                    LOGGER.info("\nS : {}\n", solution);
-//
-//                    StringBuilder variableNames = new StringBuilder();
-//                    for (SatVariable variable : variables) {
-//                        if (!(variable.isFluent())) {
-//                            variableNames.append(variable.getName()).append(", ");
-//                        }
-//                    }
-//                    LOGGER.info("\nV : {}\n", variableNames.toString());
+                    LOGGER.info("\nS : {}\n", solution);
+
+                    StringBuilder variableNames = new StringBuilder();
+                    for (SatVariable variable : variables) {
+                        if (!(variable.isFluent())) {
+                            variableNames.append(variable.getName()).append(", ");
+                        }
+                    }
+                    LOGGER.info("\nV : {}\n", variableNames.toString());
 
                     // Reconstruct the plan from the solution
                     Action action;
