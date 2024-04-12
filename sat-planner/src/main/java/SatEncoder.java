@@ -287,8 +287,13 @@ public class SatEncoder extends AbstractPlanner {
         // Iterate over each time step
         for (int timeStep = startTime; timeStep < lastStep; timeStep++) {
             handleActionImplications(satVariables, prevClauses, timeStep);
+            int size1 = prevClauses.size();
+            System.out.println("Action Implification : " + size1);
             handleStateTransition(satVariables, prevClauses, timeStep, varPerTimeStep);
+            int size2 = prevClauses.size();
+            System.out.println("State Transition : " + (prevClauses.size() - size1));
             handleActionDisjunction(satVariables, prevClauses, timeStep);
+            System.out.println("Action Disjunction : " + (prevClauses.size() - size2));
         }
     }
 
@@ -409,17 +414,18 @@ public class SatEncoder extends AbstractPlanner {
 
         int variableSize = fluents.size() + actions.size();
 
-        createSATVariables(fluents, actions, stepCount, variables);
+//        createSATVariables(fluents, actions, stepCount, variables);
 //        generateTransitionClauses(variables, transitionClauses, stepCount, variableSize);
 
-        BitVector goalState = problem.getGoal().getPositiveFluents();
+        BitVector goalState = problem.getGoal().getPositiveFluents();;
 
-        ArrayList<int[]> initClauses = getInitClauses(problem, variables);
+        ArrayList<int[]> initClauses =  new ArrayList<>();
         ArrayList<int[]> goalClauses;
 
         // Start the search timer
         long searchTimeStart = System.currentTimeMillis();
 
+        boolean firstIt = true;
         // Continue the search until the time limit is reached
         while (System.currentTimeMillis() - searchTimeStart <= MAX_TIMER) {
 
@@ -432,6 +438,10 @@ public class SatEncoder extends AbstractPlanner {
 
             // Generate SAT clauses
             createSATVariables(fluents, actions, stepCount, variables);
+            if (firstIt) {
+                firstIt = false;
+                initClauses = getInitClauses(problem, variables);
+            }
             generateTransitionClauses(variables, transitionClauses, stepCount, variableSize);
             goalClauses = encodeGoalState(fluents, goalState, variableSize, stepCount);
 
@@ -439,6 +449,11 @@ public class SatEncoder extends AbstractPlanner {
             addClauses(solver, initClauses);
             addClauses(solver, transitionClauses);
             addClauses(solver, goalClauses);
+
+            System.out.println("Init Clauses : " + initClauses.size());
+            System.out.println("Transition Clauses : " + transitionClauses.size());
+            System.out.println("Goal Clauses : " + goalClauses.size());
+            System.out.println("Variables : " + variables.size());
 
             try {
                 // Check if the solver found a satisfying assignment
