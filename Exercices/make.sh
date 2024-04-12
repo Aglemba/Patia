@@ -17,7 +17,9 @@ java -cp pddl4j/pddl4j-4.0.0.jar fr.uga.pddl4j.planners.statespace.HSP \
 # Si tout s'est bien passé, affichez le message Succès
 # Sinon, affichez le message Erreur
 if [ $? -eq 0 ]; then
+    echo -e "*******************************\n"
     echo -e "*** $1 : Succès !! ***\n"
+    echo -e "*******************************\n"
 else
     echo "*** $1 : Echec ***\n\n"
     echo "Erreur lors de l'exécution du domain $1 : $1/domain.pddl\n"
