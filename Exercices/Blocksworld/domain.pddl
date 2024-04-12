@@ -1,58 +1,184 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 4 Op-blocks world
+;;;     Exercice 1 : Blocksworld     ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; Définition du domaine Blocksworld
 (define (domain blocks)
-  ; strips : probleme simple / typing : types des objets
-  (:requirements :strips :typing)
-  (:types block)
-  (:predicates (on ?x - block ?y - block)
-  			   (ontable ?x - block)
-  			   (clear ?x - block)
-  			   (handempty)
-  			   (holding ?x - block))
 
-  (:action pick-up
-	     :parameters (?x - block)
-	     :precondition (and (clear ?x) (ontable ?x) (handempty))
-	     :effect
-		 ; le bloc n'est plus sur la table
-	     (and (not (ontable ?x))
+	(:requirements :strips :typing)
+
+	; Types : Les blocs sont de type "block"
+	(:types block)
+
+	; Prédicats : Fonctions qui décrivent notre domaine
+	(:predicates
+		
+  		; Le bloc "x" est sur le bloc "y"
+  		(on ?x - block ?y - block)
+  		
+  		; Le bloc "x" est sur la table
+  		(ontable ?x - block)
+  		
+  		; Le bloc "x" est attrapable par le bras
+  		(clear ?x - block)
+  		
+  		; Le bras est vide
+  		(handempty)
+  		
+  		; Le bras tient le bloc "x"
+  		(holding ?x - block)
+	)
+
+	; Action : Prendre un bloc
+	(:action pick-up
+		
+		; Paramètres : Le bloc "x"
+		:parameters (?x - block)
+
+		; Préconditions de l'action : Prendre un bloc
+		:precondition
+
+			; Ensemble des préconditions de cette action
+			(and 
+				; Le bloc "x" est attrapable
+				(clear ?x)
+
+				; Le bloc "x" est sur la table
+				(ontable ?x)
+
+				; Le bras est vide
+				(handempty))
+
+		; Effets de l'action : Prendre un bloc
+		:effect
+
+			; Ensemble des effets de cette action
+			(and
+				; Le bloc "x" n'est plus sur la table
+				(not (ontable ?x))
 	        
-	       ; le bloc n est pas attrapable (quelque cose dessus)
-		   (not (clear ?x))
+				; Le bloc "x" n'est plus attrapable (le bloc "x" est attrapé)
+				(not (clear ?x))
 
-		   ; le bras est vide
-		   (not (handempty))
+				; Le bras n'est plus vide (il tient le bloc "x")
+				(not (handempty))
 
-		   ; X est sur la table
-		   (holding ?x)))
+				; Le bras tient le bloc "x"
+				(holding ?x)
+			)
+	)
 
-  (:action put-down
-	     :parameters (?x - block)
-	     :precondition (holding ?x)
-	     :effect
-	     (and (not (holding ?x))
-		   (clear ?x)
-		   (handempty)
-		   (ontable ?x)))
-  
-  (:action stack
-	     :parameters (?x - block ?y - block)
-	     :precondition (and (holding ?x) (clear ?y))
-	     :effect
-	     (and (not (holding ?x))
-		   (not (clear ?y))
-		   (clear ?x)
-		   (handempty)
-		   (on ?x ?y)))
-  
-  (:action unstack
-	     :parameters (?x - block ?y - block)
-	     :precondition (and (on ?x ?y) (clear ?x) (handempty))
-	     :effect
-	     (and (holding ?x)
-		   (clear ?y)
-		   (not (clear ?x))
-		   (not (handempty))
-		   (not (on ?x ?y)))))
+	; Action : Poser un bloc
+	(:action put-down
+		
+		; Paramètres : Le bloc "x"
+		:parameters (?x - block)
+
+		; Préconditions de l'action : Poser un bloc
+		:precondition 
+
+			; Le bras tient le bloc "x"
+			(holding ?x)
+
+		; Effets de l'action : Poser un bloc
+		:effect
+
+			; Ensemble des effets de cette action
+			(and
+				; Le bras ne tient plus le bloc "x"
+				(not (holding ?x))
+	        
+				; Le bloc "x" est sur la table
+				(ontable ?x)
+
+				; Le bras est vide
+				(handempty)
+
+				; Le bloc "x" est attrapable
+				(clear ?x)
+			)
+	)
+
+	; Action : Empiler un bloc sur un autre bloc
+	(:action stack
+		
+		; Paramètres : Les blocs "x" et "y"
+		:parameters (?x - block ?y - block)
+
+		; Préconditions de l'action : Empiler un bloc sur un autre bloc
+		:precondition
+
+			; Ensemble des préconditions de cette action
+			(and 
+				; Le bras tient le bloc "x"
+				(holding ?x)
+
+				; Le bloc "y" est attrapable
+				(clear ?y)
+			)
+
+		; Effets de l'action : Empiler un bloc sur un autre bloc
+		:effect
+
+			; Ensemble des effets de cette action
+			(and
+				; Le bras ne tient plus le bloc "x"
+				(not (holding ?x))
+	        
+				; Le bloc "y" n'est plus attrapable (le bloc "x" est au dessus du bloc "y")
+				(not (clear ?y))
+
+				; Le bloc "x" est attrapable
+				(clear ?x)
+
+				; Le bras est vide
+				(handempty)
+
+				; Le bloc "x" est sur le bloc "y"
+				(on ?x ?y)
+			)
+	)
+
+	; Action : Dépiler un bloc d'un autre bloc
+	(:action unstack
+		
+		; Paramètres : Les blocs "x" et "y"
+		:parameters (?x - block ?y - block)
+
+		; Préconditions de l'action : Dépiler un bloc d'un autre bloc
+		:precondition
+
+			; Ensemble des préconditions de cette action
+			(and 
+				; Le bloc "x" est sur le bloc "y"
+				(on ?x ?y)
+
+				; Le bloc "x" est attrapable
+				(clear ?x)
+
+				; Le bras est vide
+				(handempty)
+			)
+
+		; Effets de l'action : Dépiler un bloc d'un autre bloc
+		:effect
+
+			; Ensemble des effets de cette action
+			(and
+				; Le bras tient le bloc "x"
+				(holding ?x)
+	        
+				; Le bloc "y" est attrapable
+				(clear ?y)
+
+				; Le bloc "x" n'est plus sur le bloc "y"
+				(not (on ?x ?y))
+
+				; Le bras n'est plus vide (il tient le bloc "x")
+				(not (handempty))
+
+				; Le bloc "x" n'est plus attrapable (le bloc "x" est attrapé)
+				(not (clear ?x))
+			)
+	)
+)

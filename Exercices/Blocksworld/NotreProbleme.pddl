@@ -1,26 +1,91 @@
-; Notre Problem Blocksworld
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;     Exercice 1 : Blocksworld     ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; Définition du problème Blocksworld
 (define (problem blocks_probleme)
 
-    ; Definition du domaine pour des blocks
+    ; Définition du domaine utilisé : "blocks"
     (:domain blocks)
 
-    ; Definition des objets : Les blocks a, b, c et d
+    ; Définition des objets utilisés
     (:objects
-        d b a c - block
+        ; a, b, c et d sont de type "block"
+        a b c d - block
     )
 
-    ; Etat initial : les blocks sont empilés dans l'ordre a, b, c, d
+    ; Initialisation du problème Blocksworld
+    ;  
+    ;           | 
+    ;           |
+    ;       +---+---+
+    ;      /         \
+    ;      \         /
+    ;   
+    ;       +-------+
+    ;       |   a   |
+    ;       +-------+
+    ;       |   b   |
+    ;       +-------+
+    ;       |   c   |
+    ;       +-------+
+    ;       |   d   |
+    ;       +-------------------+
+    ;       |       TABLE       |
+    ;       +-------------------+
+    ;
     (:init
+        
+        ; Le block "a" est attrapable par le bras
         (clear a)
+
+        ; Le bloc "a" est sur le bloc "b"
         (on a b)
+
+        ; Le bloc "b" est sur le bloc "c"
         (on b c)
+
+        ; Le bloc "c" est sur le bloc "d"
         (on c d)
+
+        ; Le bloc "d" est sur la table
         (ontable d)
+
+        ; Le bras est vide
         (handempty)
     )
 
-    ; But : les blocks sont empilés dans l'ordre a, d, c, b
+    ; But Final du problème Blocksworld
+    ;  
+    ;           | 
+    ;           |
+    ;       +---+---+
+    ;      /         \
+    ;      \         /
+    ;   
+    ;       +-------+
+    ;       |   a   |
+    ;       +-------+
+    ;       |   d   |
+    ;       +-------+
+    ;       |   c   |
+    ;       +-------+
+    ;       |   b   |
+    ;       +-------------------+
+    ;       |       TABLE       |
+    ;       +-------------------+
+    ;
     (:goal
-        (and (on a d) (on d c) (on c b)))
+        ; Ensemble des conditions à satisfaire pour atteindre le but final
+        (and
+            ; Le bloc "a" est sur le bloc "d"
+            (on a d)
+            
+            ; Le bloc "d" est sur le bloc "c"
+            (on d c)
+            
+            ; Le bloc "c" est sur le bloc "b"
+            (on c b)
+        )
+    )
 )
