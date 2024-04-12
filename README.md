@@ -82,4 +82,22 @@ Puis, ouvrir le lien suivant:
 
 http://localhost:8888/test.html
 
-([voir le contenu du make Sokoban](/Sokoban/makeSokoban.sh))
+([voir le contenu du make Sokoban](/Sokoban/run.sh))
+
+## SAT Planning
+
+### >>> Compiler / Exécuter le SAT Planning
+
+Pour compiler et exécuter le SAT Planning, vous devez vous placer dans le répertoire `sat-planner`.
+```bash
+cd sat-planner
+```
+
+Ensuite, exécutez le script make.sh en remplaçant `<nom_du_domain.pddl>` par le nom du fichier du domaine PDDL et `<nom_du_probleme.pddl>` par le nom du fichier du problème PDDL.
+
+```bash
+./make.sh <nom_du_domain.pddl> <nom_du_probleme.pddl>
+```
+
+([voir le contenu du make SatPlanner](/sat-planner/make.sh))
+

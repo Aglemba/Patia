@@ -13,8 +13,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-
+/**
+ * This class provides a command-line interface for solving Sokoban puzzles using the HSP planner.
+ * It reads a JSON file containing a Sokoban puzzle layout, generates a PDDL representation of the problem,
+ * solves it using the HSP planner, and outputs the solution as a sequence of moves to a text file.
+ */
 public class SokobanSolver {
+    /**
+     * Main method to solve Sokoban puzzles using the HSP planner.
+     * @param args Command-line arguments. The first argument (optional) specifies the name of the test file to use.
+     * @throws IOException If an I/O error occurs while reading or writing files.
+     */
     public static void main(String[] args) throws IOException {
 
         final String benchmarks = "pddl/";

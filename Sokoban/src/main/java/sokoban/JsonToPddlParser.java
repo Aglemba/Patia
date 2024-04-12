@@ -6,6 +6,10 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.util.ArrayList;
 
+/**
+ * This class parses JSON input representing a Sokoban puzzle and generates a PDDL representation of the problem.
+ * It reads a JSON file containing the Sokoban puzzle layout and converts it into a PDDL problem file.
+ */
 public class JsonToPddlParser {
 
     private ArrayList<String> nodes = new ArrayList<String>();
@@ -18,8 +22,12 @@ public class JsonToPddlParser {
     private static StringBuilder inits = new StringBuilder(":init\n");
     private static StringBuilder goals = new StringBuilder(":goal\n(and\n");
     private static StringBuilder output = new StringBuilder();
-
-
+    
+    /**
+     * Creates a unique value matrix from the original Sokoban puzzle matrix.
+     * @param originalMatrix The original Sokoban puzzle matrix.
+     * @return A matrix containing unique values corresponding to elements of the original matrix.
+     */
     public ArrayList<ArrayList<String>> createUniqueValueMatrix(ArrayList<ArrayList<Character>> originalMatrix) {
         ArrayList<ArrayList<String>> uniqueValueMatrix = new ArrayList<>();
 
@@ -43,25 +51,42 @@ public class JsonToPddlParser {
         return uniqueValueMatrix;
     }
 
+    /**
+     * Generates a unique node value and updates the objects StringBuilder with the node information.
+     * @return The generated unique node value.
+     */
     private String generateUniqueNode() {
         String newNode = "node" + nextUniqueNodeValue++;
         nodes.add(newNode);
         objects.append(newNode).append(" - node\n");
         return newNode;
     }
-
+    
+    /**
+     * Generates a unique box value and updates the objects StringBuilder with the box information.
+     * @return The generated unique box value.
+     */
     private String generateUniqueBox() {
         String newBox = "box" + nextUniqueBoxValue++;
         objects.append(newBox).append(" - box\n");
         return newBox;
     }
-
+    
+    /**
+     * Generates a unique agent value and updates the objects StringBuilder with the agent information.
+     * @return The generated unique agent value.
+     */
     private String generateUniqueAgent() {
         String newAgent = "agent" + nextUniqueAgentValue++;
         objects.append(newAgent).append(" - agent\n");
         return newAgent;
     }
-
+    
+    /**
+     * Creates a matrix representation of the Sokoban puzzle from the input string.
+     * @param testIn The input string containing the Sokoban puzzle layout.
+     * @return A matrix representing the Sokoban puzzle.
+     */
     public ArrayList<ArrayList<Character>> createMatrix(String testIn) {
         String[] rows = testIn.split("\n");
 
@@ -79,6 +104,11 @@ public class JsonToPddlParser {
         return matrix;
     }
 
+    /**
+     * Generates PDDL rules based on the original Sokoban puzzle matrix and its unique value matrix.
+     * @param originalMatrix The original Sokoban puzzle matrix.
+     * @param uniqueValueMatrix The matrix containing unique values corresponding to elements of the original matrix.
+     */
     public void generatePddlRules(ArrayList<ArrayList<Character>> originalMatrix, ArrayList<ArrayList<String>> uniqueValueMatrix) {
 
         int numRows = uniqueValueMatrix.size();
@@ -154,7 +184,11 @@ public class JsonToPddlParser {
         }
 
     }
-
+    
+    /**
+     * Parses the JSON file at the specified path and generates a corresponding PDDL representation.
+     * @param jsonFilePath The path to the JSON file containing the Sokoban puzzle layout.
+     */
     public void parse(String jsonFilePath) {
         try (FileReader reader = new FileReader(jsonFilePath)) {
             JSONParser parser = new JSONParser();
