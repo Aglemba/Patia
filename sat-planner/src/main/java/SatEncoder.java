@@ -1,8 +1,8 @@
 import fr.uga.pddl4j.heuristics.state.FastForward;
-import fr.uga.pddl4j.heuristics.state.StateHeuristic;
 import fr.uga.pddl4j.parser.DefaultParsedProblem;
 import fr.uga.pddl4j.parser.RequireKey;
 import fr.uga.pddl4j.plan.Plan;
+import fr.uga.pddl4j.plan.SequentialPlan;
 import fr.uga.pddl4j.planners.AbstractPlanner;
 import fr.uga.pddl4j.problem.DefaultProblem;
 import fr.uga.pddl4j.problem.Fluent;
@@ -10,10 +10,15 @@ import fr.uga.pddl4j.problem.Problem;
 import fr.uga.pddl4j.problem.State;
 import fr.uga.pddl4j.problem.operator.Action;
 import fr.uga.pddl4j.util.BitVector;
+import org.sat4j.core.VecInt;
 import org.sat4j.minisat.SolverFactory;
+import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.ISolver;
+import org.sat4j.specs.TimeoutException;
 import picocli.CommandLine;
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
@@ -34,15 +39,11 @@ public class SatEncoder extends AbstractPlanner {
 
     private static final Logger LOGGER = LogManager.getLogger(SatEncoder.class.getName());
 
-    /**
-     * The weight of the heuristic.
-     */
-    private double heuristicWeight;
+    private final int VAR_COUNT = 100000;
 
-    /**
-     * The name of the heuristic used by the planner.
-     */
-    private StateHeuristic.Name heuristic;
+    private final int CLAUSE_COUNT = 100000;
+
+    private final long MAX_TIMER = 10 * 60 * 1000; // 10 minutes in milliseconds
 
     /**
      * Instantiates the planning problem from a parsed problem.
@@ -67,11 +68,9 @@ public class SatEncoder extends AbstractPlanner {
      * @param actions       List of actions available.
      * @param timeStep     Number of time steps.
      * @param existingVariables   List of previously created SAT variables.
-     * @return              Updated list of SAT variables.
      */
-    private ArrayList<SatVariable> createSATVariables(ArrayList<Fluent> fluents, ArrayList<Action> actions, int timeStep,
-                                                      ArrayList<SatVariable> existingVariables) {
-
+    private void createSATVariables(ArrayList<Fluent> fluents, ArrayList<Action> actions, int timeStep,
+                                    ArrayList<SatVariable> existingVariables) {
         // Determine the starting variable name based on existing variables
         int variableName = existingVariables.isEmpty() ? 1 : existingVariables.size() + 1;
         int previousStep = existingVariables.isEmpty() ? 0 : timeStep - 1;
@@ -84,9 +83,9 @@ public class SatEncoder extends AbstractPlanner {
             int[] fluentVarIndices = new int[numFluents];
 
             // Transform propositions to SATVariables
-            for (int fluentIndex = 0; fluentIndex < numFluents; fluentIndex++) {
+            for (int i = 0; i < numFluents; i++) {
                 SatVariable propositionVariable = new SatVariable(step, variableName, true);
-                fluentVarIndices[fluentIndex] = variableName++;
+                fluentVarIndices[i] = variableName++;
 
                 // Add the new variable to existingVariables if it doesn't already exist
                 if (!existingVariables.contains(propositionVariable)) {
@@ -102,23 +101,23 @@ public class SatEncoder extends AbstractPlanner {
                 BitVector positivePreconditions = action.getPrecondition().getPositiveFluents();
 
                 // Add positive effects to actions
-                for (int bit = 0; bit < positiveEffects.length(); bit++) {
-                    if (positiveEffects.get(bit)) {
-                        actionVariable.addPositiveEffect(fluentVarIndices[bit] + (numFluents + numActions));
+                for (int i = 0; i < positiveEffects.length(); i++) {
+                    if (positiveEffects.get(i)) {
+                        actionVariable.addPositiveEffect(fluentVarIndices[i] + (numFluents + numActions));
                     }
                 }
 
                 // Add negative effects to actions
-                for (int bit = 0; bit < negativeEffects.length(); bit++) {
-                    if (negativeEffects.get(bit)) {
-                        actionVariable.addNegativeEffect(fluentVarIndices[bit] + (numFluents + numActions));
+                for (int i = 0; i < negativeEffects.length(); i++) {
+                    if (negativeEffects.get(i)) {
+                        actionVariable.addNegativeEffect(fluentVarIndices[i] + (numFluents + numActions));
                     }
                 }
 
                 // Add positive preconditions to actions
-                for (int bit = 0; bit < positivePreconditions.length(); bit++) {
-                    if (positivePreconditions.get(bit)) {
-                        actionVariable.addPrecondition(fluentVarIndices[bit]);
+                for (int i = 0; i < positivePreconditions.length(); i++) {
+                    if (positivePreconditions.get(i)) {
+                        actionVariable.addPrecondition(fluentVarIndices[i]);
                     }
                 }
 
@@ -131,8 +130,196 @@ public class SatEncoder extends AbstractPlanner {
                 }
             }
         }
+    }
 
-        return existingVariables;
+    /**
+     * Creates a clause for state changes.
+     *
+     * @param fluentName         Name of the fluent.
+     * @param fluentNext         Name of the next fluent.
+     * @param actionList         List of actions affecting the fluent.
+     * @return Clause for state changes.
+     */
+    private int[] createClause(int fluentName, int fluentNext, ArrayList<Integer> actionList) {
+        // Initialize an array to store the clause
+        int[] clause = new int[actionList.size() + 2];
+
+        // Set the first two elements of the clause to represent the fluent and its negation in the next time step
+        clause[0] = fluentName;
+        clause[1] = -fluentNext;
+
+        // Populate the clause with the indices of actions affecting the fluent
+        for (int i = 0; i < actionList.size(); i++) {
+            clause[i + 2] = actionList.get(i);
+        }
+
+        // Return the created clause
+        return clause;
+    }
+
+    /**
+     * Handles the generation of action implications for a given time step.
+     *
+     * @param satVariables List of SAT variables.
+     * @param prevClauses  Previous list of clauses.
+     * @param timeStep     The current time step.
+     */
+    private void handleActionImplications(ArrayList<SatVariable> satVariables, ArrayList<int[]> prevClauses, int timeStep) {
+        for (SatVariable action : satVariables) {
+            if (!action.isFluent() && action.getStep() == timeStep) {
+                for (int precondition : action.getPreconditions()) {
+                    prevClauses.add(new int[]{-action.getName(), precondition});
+                }
+
+                for (int positiveEffect : action.getPositiveEffects()) {
+                    prevClauses.add(new int[]{-action.getName(), positiveEffect});
+                }
+
+                for (int negativeEffect : action.getNegativeEffects()) {
+                    prevClauses.add(new int[]{-action.getName(), -negativeEffect});
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Handles the generation of state transitions for a given time step.
+     *
+     * @param satVariables    List of SAT variables.
+     * @param prevClauses     Previous list of clauses.
+     * @param timeStep        The current time step.
+     * @param varPerTimeStep Number of variables per time step.
+     */
+    private void handleStateTransition(ArrayList<SatVariable> satVariables, ArrayList<int[]> prevClauses, int timeStep, int varPerTimeStep) {
+        for (SatVariable fluent : satVariables) {
+            if (fluent.isFluent() && fluent.getStep() == timeStep) {
+                int fluentNext = fluent.getName() + varPerTimeStep;
+                ArrayList<Integer> actionWithPosEffect = new ArrayList<>();
+                ArrayList<Integer> actionWithNegEffect = new ArrayList<>();
+
+
+                // Find actions affecting the fluent in the next time step
+                for (SatVariable action : satVariables) {
+                    if (action.getStep() == timeStep && !action.isFluent()) {
+                        for (int affectedF : action.getPositiveEffects()) {
+                            if (affectedF == fluentNext) {
+                                actionWithPosEffect.add(action.getName());
+                                break;
+                            }
+                        }
+
+                        for (int affectedF : action.getNegativeEffects()) {
+                            if (affectedF == fluentNext) {
+                                actionWithNegEffect.add(action.getName());
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Add clauses representing state changes
+                prevClauses.add(createClause(fluent.getName(), fluentNext, actionWithPosEffect));
+                prevClauses.add(createClause(-fluent.getName(), -fluentNext, actionWithNegEffect));
+            }
+        }
+    }
+
+    /**
+     * Handles the generation of action disjunction for a given time step.
+     *
+     * @param satVariables List of SAT variables.
+     * @param prevClauses  Previous list of clauses.
+     * @param timeStep     The current time step.
+     */
+    private void handleActionDisjunction(ArrayList<SatVariable> satVariables, ArrayList<int[]> prevClauses, int timeStep) {
+        ArrayList<Integer> handledActions = new ArrayList<>();
+        for (SatVariable action : satVariables) {
+            if (!action.isFluent() && action.getStep() == timeStep && !handledActions.contains(action.getName())) {
+                for (SatVariable otherAction : satVariables) {
+                    if (!otherAction.isFluent() && otherAction.getStep() == timeStep && action.getName() != otherAction.getName()) {
+                        prevClauses.add(new int[]{-action.getName(), -otherAction.getName()});
+                    }
+                }
+                handledActions.add(action.getName());
+            }
+        }
+    }
+
+    /**
+     * Generates transition clauses for a SAT problem.
+     *
+     * @param satVariables     List of SAT variables.
+     * @param prevClauses      Previous list of clauses.
+     * @param lastStep         Last step of transition.
+     * @param varPerTimeStep  Number of variables per time step.
+     */
+    private void generateTransitionClauses(ArrayList<SatVariable> satVariables,
+                                           ArrayList<int[]> prevClauses,
+                                           int lastStep, int varPerTimeStep) {
+        // Determine the starting time step based on whether previous clauses exist
+        int startTime = (prevClauses.isEmpty()) ? 0 : lastStep - 1;
+
+        // Iterate over each time step
+        for (int timeStep = startTime; timeStep < lastStep; timeStep++) {
+            handleActionImplications(satVariables, prevClauses, timeStep);
+            handleStateTransition(satVariables, prevClauses, timeStep, varPerTimeStep);
+            handleActionDisjunction(satVariables, prevClauses, timeStep);
+        }
+    }
+
+    /**
+     * Encodes goal state clauses for the SAT problem.
+     *
+     * @param fluents     List of fluents.
+     * @param goalState   Goal state.
+     * @param variableSize Size of variables per time step.
+     * @param stepCount   Total number of time steps.
+     * @return List of goal state clauses.
+     */
+    private ArrayList<int[]> encodeGoalState(ArrayList<Fluent> fluents, BitVector goalState, int variableSize, int stepCount) {
+        // Initialize the list to store goal clauses
+        ArrayList<int[]> goalClauses = new ArrayList<>();
+
+        // Iterate over each fluent
+        for (int i = 1; i <= fluents.size(); i++) {
+            // Calculate the index of the fluent in the last step
+            int fluentIndex = i + (variableSize * (stepCount));
+
+            // If the fluent is present in the goal state, add it to the clause
+            if (goalState.get(i - 1)) {
+                int[] clause = {fluentIndex};
+                goalClauses.add(clause);
+            }
+        }
+
+        // Return the list of goal clauses
+        return goalClauses;
+    }
+
+    /**
+     * Adds clauses to the SAT solver.
+     *
+     * @param solver      The SAT solver instance.
+     * @param clauses     List of clauses to add.
+     */
+    private boolean addClauses(ISolver solver, ArrayList<int[]> clauses) {
+        // Iterate over each clause
+        for (int[] clause : clauses) {
+            try {
+                // Check if the clause is non-empty
+                if (clause.length > 0) {
+                    // Add the clause to the solver
+                    solver.addClause(new VecInt(clause));
+                } else {
+                    // Log a message if the clause has an invalid format
+                    LOGGER.info("Clause with invalid format!");
+                }
+            } catch (ContradictionException e) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -142,17 +329,24 @@ public class SatEncoder extends AbstractPlanner {
      * @return           A list of initial clauses represented as arrays of integers.
      */
     private ArrayList<int[]> getInitClauses(Problem problem, ArrayList<SatVariable> variables) {
+        // Initialize the list to store initial clauses
         ArrayList<int[]> initClauses = new ArrayList<>();
+
+        // Get the positive fluents of the initial state
         BitVector initState = problem.getInitialState().getPositiveFluents();
 
+        // Iterate over each SAT variable
         for (SatVariable v : variables) {
+            // Check if the variable is at step 0 and is a fluent
             if (v.getStep() == 0 && v.isFluent()) {
                 int varName = v.getName();
+                // Create a clause based on whether the variable is true or false in the initial state
                 int[] clause = { initState.get(varName - 1) ? varName : -varName };
+                // Add the clause to the list of initial clauses
                 initClauses.add(clause);
             }
         }
-
+        // Return the list of initial clauses
         return initClauses;
     }
 
@@ -212,80 +406,92 @@ public class SatEncoder extends AbstractPlanner {
      */
     @Override
     public Plan solve(final Problem problem) {
+        // Log the start of the SAT search
         LOGGER.info("* Starting SAT search \n");
 
-        boolean solved = false;
+        problem.instantiate();
 
-        int estimation = calculateEstimation(problem);
-        System.out.println(estimation);
-
+        // Initialize variables
+        int stepCount = calculateEstimation(problem);
         ArrayList<Fluent> fluents = new ArrayList<>(problem.getFluents());
         ArrayList<Action> actions = new ArrayList<>(problem.getActions());
-        ArrayList<SatVariable> variables = createSATVariables(fluents, actions, estimation, new ArrayList<>());
+        ArrayList<int[]> transitionClauses = new ArrayList<>();
+        ArrayList<SatVariable> variables = new ArrayList<>();
+
+        int variableSize = fluents.size() + actions.size();
+
         BitVector goalState = problem.getGoal().getPositiveFluents();
 
-        ArrayList<int[]> initClauses = getInitClauses(problem, variables);
-        ArrayList<int[]> transitionClauses = new ArrayList<>();
-        ArrayList<int[]> goalClauses = new ArrayList<>();
+        ArrayList<int[]> initClauses =  new ArrayList<>();
+        ArrayList<int[]> goalClauses;
 
-        System.out.println(initClauses);
+        // Start the search timer
+        long searchTimeStart = System.currentTimeMillis();
 
-//        while (!solved) {
-//
-//            ISolver solver = SolverFactory.newDefault();
-//            solver.newVar(1000000);
-//            solver.setExpectedNumberOfClauses(500000);
-//
-//            variables = createSATVariables(fluents, actions, estimation, variables);
-//
-//        }
+        boolean firstIt = true;
+        // Continue the search until the time limit is reached
+        while (System.currentTimeMillis() - searchTimeStart <= MAX_TIMER) {
 
-        return null;
-    }
+            System.out.println("Starting step " + stepCount);
 
-    /**
-     * Sets the weight of the heuristic.
-     *
-     * @param weight the weight of the heuristic. The weight must be greater than 0.
-     * @throws IllegalArgumentException if the weight is strictly less than 0.
-     */
-    @CommandLine.Option(names = {"-w", "--weight"}, defaultValue = "1.0",
-            paramLabel = "<weight>", description = "Set the weight of the heuristic (preset 1.0).")
-    public void setHeuristicWeight(final double weight) {
-        if (weight <= 0) {
-            throw new IllegalArgumentException("Weight <= 0");
+            // Create a new solver instance
+            ISolver solver = SolverFactory.newDefault();
+            solver.newVar(VAR_COUNT);
+            solver.setExpectedNumberOfClauses(CLAUSE_COUNT);
+
+            // Generate SAT clauses
+            createSATVariables(fluents, actions, stepCount, variables);
+            if (firstIt) {
+                firstIt = false;
+                initClauses = getInitClauses(problem, variables);
+            }
+            generateTransitionClauses(variables, transitionClauses, stepCount, variableSize);
+            goalClauses = encodeGoalState(fluents, goalState, variableSize, stepCount);
+
+            boolean initClausesAdded = addClauses(solver, initClauses);
+            boolean transitionClausesAdded = addClauses(solver, transitionClauses);
+            boolean goalClausesAdded = addClauses(solver, goalClauses);
+
+            if (!initClausesAdded || !transitionClausesAdded || !goalClausesAdded) {
+                stepCount++;
+                continue;
+            }
+
+            try {
+                // Check if the solver found a satisfying assignment
+                if (solver.isSatisfiable()) {
+                    Plan plan = new SequentialPlan();
+                    int[] solution = solver.findModel();
+
+                    // Reconstruct the plan from the solution
+                    Action action;
+                    for (int s : solution) {
+                        for (SatVariable v : variables) {
+                            if (!v.isFluent() && v.getName() == s) {
+                                int index = (v.getName() % variableSize == 0) ?
+                                        actions.size() - 1 :
+                                        (v.getName() % variableSize) - fluents.size() - 1;
+
+                                action = actions.get(index);
+                                plan.add(v.getStep(), action);
+                                break;
+                            }
+                        }
+                    }
+
+                    LOGGER.info("\nPlan found in {} seconds\n", ((float) (System.currentTimeMillis() - searchTimeStart) / 600));
+                    return plan;
+                }
+
+                stepCount++; // Increment step count for next iteration
+            } catch (TimeoutException e) {
+                throw new RuntimeException(e);
+            }
         }
-        this.heuristicWeight = weight;
-    }
 
-    /**
-     * Set the name of heuristic used by the planner to the solve a planning problem.
-     *
-     * @param heuristic the name of the heuristic.
-     */
-    @CommandLine.Option(names = {"-e", "--heuristic"}, defaultValue = "FAST_FORWARD",
-            description = "Set the heuristic : AJUSTED_SUM, AJUSTED_SUM2, AJUSTED_SUM2M, COMBO, "
-                    + "MAX, FAST_FORWARD SET_LEVEL, SUM, SUM_MUTEX (preset: FAST_FORWARD)")
-    public void setHeuristic(StateHeuristic.Name heuristic) {
-        this.heuristic = heuristic;
-    }
-
-    /**
-     * Returns the name of the heuristic used by the planner to solve a planning problem.
-     *
-     * @return the name of the heuristic used by the planner to solve a planning problem.
-     */
-    public final StateHeuristic.Name getHeuristic() {
-        return this.heuristic;
-    }
-
-    /**
-     * Returns the weight of the heuristic.
-     *
-     * @return the weight of the heuristic.
-     */
-    public final double getHeuristicWeight() {
-        return this.heuristicWeight;
+        // Log a message if the search timeout is exceeded
+        LOGGER.info("Search timeout: " + (MAX_TIMER / 60000) + " minutes exceeded");
+        return null;
     }
 
     /**
