@@ -19,28 +19,20 @@
 
         (isConnected a b arc1)
         (isConnected b a arc1)
-
         (isConnected a c arc2)
         (isConnected c a arc2)
-
         (isConnected b c arc3)
         (isConnected c b arc3)
-
         (isConnected b d arc4)
         (isConnected d b arc4)
-
         (isConnected d c arc5)
         (isConnected c d arc5)
-
-        (isConnected d f arc6)
-        (isConnected f d arc6)
-
+        (isConnected d e arc6)
+        (isConnected e d arc6)
         (isConnected c e arc7)
         (isConnected e c arc7)
-
         (isConnected e f arc8)
         (isConnected f e arc8)
-
         (isConnected c f arc9)
         (isConnected f c arc9)
 
