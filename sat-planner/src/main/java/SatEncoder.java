@@ -350,42 +350,6 @@ public class SatEncoder extends AbstractPlanner {
         return initClauses;
     }
 
-    private ArrayList<int[]> getTransitionClauses(Problem problem, ArrayList<SatVariable> variables) {
-        ArrayList<int[]> transitionClauses = new ArrayList<>();
-        ArrayList<SatTransition> transitions = new ArrayList<>();
-
-        for (SatVariable v : variables) {
-            if (!v.isFluent()) {
-                SatTransition transition = new SatTransition(v.getStep());
-                transition.addPrecondition(v.getPreconditions());
-                transition.addPositiveEffect(v.getPositiveEffects());
-                transition.addNegativeEffect(v.getNegativeEffects());
-                transitions.add(transition);
-            }
-        }
-
-        for (SatTransition t : transitions) {
-            int step = t.getStep();
-            ArrayList<Integer> preconditions = t.getPreconditions();
-            ArrayList<Integer> positiveEffects = t.getPositiveEffects();
-            ArrayList<Integer> negativeEffects = t.getNegativeEffects();
-
-            for (int precondition : preconditions) {
-                for (int positiveEffect : positiveEffects) {
-                    int[] clause = { -precondition, positiveEffect };
-                    transitionClauses.add(clause);
-                }
-
-                for (int negativeEffect : negativeEffects) {
-                    int[] clause = { -precondition, negativeEffect };
-                    transitionClauses.add(clause);
-                }
-            }
-        }
-
-        return transitionClauses;
-    }
-
     /**
      * Calculates the estimation of the minimum number of steps required to reach the goal state from the initial state.
      *
