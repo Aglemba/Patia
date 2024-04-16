@@ -1,0 +1,10 @@
+Time : 4.2433333 - Steps : 20
+Time : 7.545 - Steps : 19
+Time : 0.66 - Steps : 15
+Time : 965.69165 - Steps : 27
+Time : 5.7516665 - Steps : 17
+Time : 0.36333334 - Steps : 8
+Time : 554.1717 - Steps : 25
+Time : 0.63666666 - Steps : 14
+Time : 497.05 - Steps : 25
+Time : 31.55 - Steps : 24

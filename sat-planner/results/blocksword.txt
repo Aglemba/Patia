@@ -1,0 +1,22 @@
+Time : 0.111666664 - Steps : 6
+Time : 0.24 - Steps : 10
+Time : 0.16833334 - Steps : 6
+Time : 0.34833333 - Steps : 12
+Time : 0.36166668 - Steps : 10
+Time : 0.69166666 - Steps : 16
+Time : 0.44833332 - Steps : 12
+Time : 0.40333334 - Steps : 10
+Time : 5.03 - Steps : 20
+Time : 1.5516666 - Steps : 20
+Time : 130.48666 - Steps : 22
+Time : 23.961666 - Steps : 20
+Time : 18.295 - Steps : 18
+Time : 197.19833 - Steps : 20
+Time : 6.7566667 - Steps : 16
+Couldn't find solution in the time limit of 10 minutes
+Time : 181.47333 - Steps : 28
+Time : 122.965 - Steps : 26
+Couldn't find solution in the time limit of 10 minutes 
+Couldn't find solution in the time limit of 10 minutes 
+Couldn't find solution in the time limit of 10 minutes 
+Couldn't find solution in the time limit of 10 minutes 
