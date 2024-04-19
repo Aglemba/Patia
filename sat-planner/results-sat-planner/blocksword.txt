@@ -13,10 +13,3 @@ Time : 23.961666 - Steps : 20
 Time : 18.295 - Steps : 18
 Time : 197.19833 - Steps : 20
 Time : 6.7566667 - Steps : 16
-Couldn't find solution in the time limit of 10 minutes
-Time : 181.47333 - Steps : 28
-Time : 122.965 - Steps : 26
-Couldn't find solution in the time limit of 10 minutes 
-Couldn't find solution in the time limit of 10 minutes 
-Couldn't find solution in the time limit of 10 minutes 
-Couldn't find solution in the time limit of 10 minutes 
