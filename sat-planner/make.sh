@@ -15,5 +15,5 @@ else
     PROBLEM_FILE="pddl/$2"
 fi
 
-java -cp "$CP:classes" SatEncoder "$DOMAIN_FILE" "$PROBLEM_FILE"
+java -cp "$CP:classes" -server -Xms4096m -Xmx4096m SatEncoder "$DOMAIN_FILE" "$PROBLEM_FILE"
 
