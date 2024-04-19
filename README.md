@@ -99,5 +99,7 @@ Ensuite, exécutez le script make.sh en remplaçant `<nom_du_domain.pddl>` par l
 ./make.sh <nom_du_domain.pddl> <nom_du_probleme.pddl>
 ```
 
+Certains domaines et problèmes peuvent être trouvés dans le dossier `sat-planner/pddl`.
+
 ([voir le contenu du make SatPlanner](/sat-planner/make.sh))
 
