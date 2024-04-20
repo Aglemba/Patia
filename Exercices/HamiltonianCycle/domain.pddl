@@ -8,13 +8,13 @@
     (:requirements :strips :typing :adl)
 
     ; Types : noeud, arc, pile
-    (:types node arc stack)
+    (:types node stack)
 
     ; Prédicats : Fonctions qui décrivent notre domaine
     (:predicates
         
         ; Le noeud "n1" est connecté au noeud "n2" par l'arc "a"
-        (isConnected ?n1 - node ?n2 - node ?a - arc)
+        (isConnected ?n1 - node ?n2 - node)
 
         ; On est passé sur le noeud "n"
         (hasPassedOnNode ?n - node)
@@ -39,7 +39,7 @@
     (:action move
         
         ; Paramètres : Les noeuds "n1" et "n2", l'arc "a" et la pile "s"
-        :parameters (?n1 - node ?n2 - node ?a - arc ?s - stack)
+        :parameters (?n1 - node ?n2 - node ?s - stack)
         
         ; Préconditions de l'action : Se déplacer
         :precondition
@@ -48,7 +48,7 @@
             (and
                 
                 ; Le noeud "n1" est connecté au noeud "n2" par l'arc "a"
-                (isConnected ?n1 ?n2 ?a)
+                (isConnected ?n1 ?n2)
 
                 ; On est sur le noeud "n1"
                 (isOnNode ?n1)
