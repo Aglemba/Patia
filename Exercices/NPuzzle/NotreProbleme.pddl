@@ -1,6 +1,6 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;      Exercice 1 : NPuzzle     ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Définition du problème NPuzzle
 (define (problem npuzzle_probleme)
@@ -106,7 +106,7 @@
         ; (permuter Trois_Trois Trois_Deux) deja fait dans le cas de la tuile E
     )
 
-    ; But : Les tuiles sont dans l'ordre
+    ; But Final du problème NPuzzle
     ;
     ;
     ; Les tuiles sont dans la configuration suivante :
