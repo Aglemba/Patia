@@ -1,63 +1,211 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 4 Op-Hanoi
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;      Domaine : Hanoi     ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; Définition du domaine Hanoi
 (define (domain hanoi)
-	; strips : probleme simple / typing : types des objets
+
 	(:requirements :strips :typing)
+
+	; Types : object, stack
 	(:types object stack)
 
+	; Prédicats : Fonctions qui décrivent notre domaine
 	(:predicates
-		; on empile le object x sur le object y
+		
+		; L'object "x" est sur l'object "y"
 		(on ?x - object ?y - object)
-		; on empile le object x sur la pile p
+
+		; On empile l'object "x" sur la pile "p"
 		(onstack ?x - object ?p - stack)
-		; le object x n'a rien au dessus de lui
+
+		; Il n'y a pas d'object au dessus de l'object "x"
 		(clear ?x - object)
-		; le bras est vide
+
+		; Le bras est vide
 		(handempty)
-		; le bras tient un object
+
+		; L'object "x" est tenu par le bras
 		(holding ?x - object)
-		; le object x est plus petit que le object y
-		(smaller ?x - object ?y - object))
 
-	; Recuperation du object x sur la pile p
+		; L'object "x" est plus petit que l'object "y"
+		(smaller ?x - object ?y - object)
+	)
+
+	; Action : Prendre un objet sur la pile
 	(:action pick-up
+		
+		; Paramètres : L'object "x" et la pile "p"
 		:parameters (?x - object ?p - stack)
-		:precondition (and (clear ?x) (onstack ?x ?p) (handempty))
-		:effect (and (holding ?x)
-			(clear ?p)
-			(not (clear ?x))
-			(not (handempty))
-			(not (onstack ?x ?p))))
 
-	; Depose le object x sur la pile p
+		; Préconditions de l'action : Prendre un object sur la pile
+		:precondition
+
+			; Ensemble des préconditions de cette action
+			(and
+				
+				; Il n'y a pas d'object au dessus de l'object "x"
+				(clear ?x)
+				
+				; L'object "x" est sur la pile "p"
+				(onstack ?x ?p)
+
+				; Le bras est vide
+				(handempty)
+			)
+
+		; Effets de l'action : Prendre un object
+		:effect
+
+			; Ensemble des effets de cette action
+			(and
+				
+				; L'object "x" est tenu par le bras
+				(holding ?x)
+
+				; Il n'y a pas d'object au dessus de l'object "p"
+				(clear ?p)
+
+				; Il y a un object au dessus de l'object "x"
+				(not (clear ?x))
+
+				; Le bras n'est plus vide
+				(not (handempty))
+
+				; L'object "x" n'est plus sur la pile "p"
+				(not (onstack ?x ?p))
+			)
+	)
+
+	; Action : Poser un objet sur le pile
 	(:action put-down
+		
+		; Paramètres : L'object "x" et la pile "p"
 		:parameters (?x - object ?p - stack)
-		:precondition (and (holding ?x) (clear ?p))
-		:effect (and (not (holding ?x))
-			(not (clear ?p))
-			(clear ?x)
-			(handempty)
-			(onstack ?x ?p)))
 
-	; Empile le object x sur le object y
+		; Préconditions de l'action : Poser un object sur le pile
+		:precondition
+		
+			; Ensemble des préconditions de cette action
+			(and
+				
+				; L'object "x" est tenu par le bras
+				(holding ?x)
+
+				; Il n'y a pas d'object au dessus de l'object "p"
+				(clear ?p)
+			)
+
+		; Effets de l'action : Poser un object sur le pile
+		:effect
+		
+			; Ensemble des effets de cette action
+			(and
+				
+				; L'object "x" n'est plus tenu par le bras
+				(not (holding ?x))
+
+				; Il y a un object au dessus de l'object "p"
+				(not (clear ?p))
+
+				; Il n'y a pas d'object au dessus de l'object "x"
+				(clear ?x)
+
+				; Le bras est vide
+				(handempty)
+
+				; L'object "x" est sur la pile "p"
+				(onstack ?x ?p)
+			)
+	)
+
+	; Action : Empiler un objet sur un autre objet
 	(:action stack
+		
+		; Paramètres : L'object "x" et l'object "y"
 		:parameters (?x - object ?y - object)
-		:precondition (and (holding ?x) (clear ?y) (smaller ?x ?y))
-		:effect (and (not (holding ?x))
-			(not (clear ?y))
-			(clear ?x)
-			(handempty)
-			(on ?x ?y)))
 
-	; Depile le object x depuis le object y
+		; Préconditions de l'action : Empiler un objet sur un autre objet
+		:precondition
+
+			; Ensemble des préconditions de cette action
+			(and
+				
+				; L'object "x" est tenu par le bras
+				(holding ?x)
+
+				; Il n'y a pas d'object au dessus de l'object "y"
+				(clear ?y)
+
+				; L'object "x" est plus petit que l'object "y"
+				(smaller ?x ?y)
+			)
+
+		; Effets de l'action : Empiler un objet sur un autre objet
+		:effect
+		
+			; Ensemble des effets de cette action
+			(and
+				
+				; L'object "x" n'est plus tenu par le bras
+				(not (holding ?x))
+
+				; Il y a un object au dessus de l'object "y"
+				(not (clear ?y))
+
+				; Il n'y a pas d'object au dessus de l'object "x"
+				(clear ?x)
+
+				; Le bras est vide
+				(handempty)
+
+				; L'object "x" est sur l'object "y"
+				(on ?x ?y)
+			)
+	)
+
+	; Action : Dépiler un objet depuis un autre objet
 	(:action unstack
+		
+		; Paramètres : L'object "x" et l'object "y"
 		:parameters (?x - object ?y - object)
-		:precondition (and (clear ?x) (on ?x ?y) (handempty))
-		:effect (and (not (on ?x ?y))
-			(not (clear ?x))
-			(not (handempty))
-			(holding ?x)
-			(clear ?y)))
+
+		; Préconditions de l'action : Dépiler un objet depuis un autre objet
+		:precondition
+			
+			; Ensemble des préconditions de cette action
+			(and
+				
+				; Il n'y a pas d'object au dessus de l'object "x"
+				(clear ?x)
+
+				; L'object "x" est sur l'object "y"
+				(on ?x ?y)
+
+				; Le bras est vide
+				(handempty)
+			)
+
+		; Effets de l'action : Dépiler un objet depuis un autre objet
+		:effect
+			
+			; Ensemble des effets de cette action
+			(and
+				
+				; L'object "x" n'est plus sur l'object "y"
+				(not (on ?x ?y))
+
+				; Il y a un object au dessus de l'object "x"
+				(not (clear ?x))
+
+				; Le bras n'est plus vide
+				(not (handempty))
+
+				; L'object "x" est tenu par le bras
+				(holding ?x)
+
+				; Il n'y a pas d'object au dessus de l'object "y"
+				(clear ?y)
+			)
+	)
 )

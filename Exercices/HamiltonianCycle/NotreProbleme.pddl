@@ -29,12 +29,12 @@
     ;                      /   +...+   \
     ;                    /    /|   |\    \
     ;                  /    /  |   |  \    \
-    ;                 /    /   |   |    \    \
-    ;               /    /     |   |      \    \
-    ;             /    /       |   |        \    \
-    ;            *****         |   |          +...+
+    ;                /    /    |   |    \    \
+    ;              /    /      |   |      \    \
+    ;            /    /        |   |        \    \
+    ;            *****         |   |         +...+
     ;            | A |         |   |         | C |
-    ;            *****         |   |          +...+
+    ;            *****         |   |         +...+
     ;             \    \       |   |        /    /
     ;               \    \     |   |      /    /
     ;                \    \    |   |    /     /
@@ -112,9 +112,7 @@
         (stackIsFilled s)
     )
 
-    ; Initialisation du problème HamiltonianCycle
-    ;
-    ;
+    ; But Final du problème HamiltonianCycle
     (:goal
         
         ; Ensemble des conditions à satisfaire pour atteindre le but final
