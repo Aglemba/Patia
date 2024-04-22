@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;     Exercice 1 : Blocksworld     ;;;
+;;;       Domaine : Blocksworld      ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Définition du domaine Blocksworld
@@ -47,7 +47,8 @@
 				(ontable ?x)
 
 				; Le bras est vide
-				(handempty))
+				(handempty)
+			)
 
 		; Effets de l'action : Prendre un bloc
 		:effect
