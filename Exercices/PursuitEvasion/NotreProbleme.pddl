@@ -24,6 +24,41 @@
     ; Initialisation du problème PursuitEvasion
     ;
     ;
+    ;   Noeud couvert : n1 (********)
+    ;   Noeud non couvert : n2, n3, n4 et n5 (-------)
+    ;
+    ;   Arc couvert : X (*********)
+    ;   Arc non couvert : arc1_2, arc2_5, arc2_3, arc2_4 et arc3_4 (-------)
+    ;
+    ;
+    ;                                n5
+    ;                            +-------+
+    ;                            |       |
+    ;                            |       |
+    ;                            |       |
+    ;                            +---+---+ 
+    ;                                |   
+    ;                                |
+    ;                              arc2_5
+    ;                                |
+    ;                                |                         n4
+    ;   *********                +---+---+                +-------+
+    ;   |   a1  |                |       |                |       |
+    ;   |       +---- arc1_2 ----+       +---- arc2_4 ----+       |
+    ;   |   a2  |                |       |\               |       |
+    ;   *********                +-------+  \             +---+---+
+    ;       n1                       n2       \               |
+    ;                                           \             |                                
+    ;                                          arc2_3       arc3_4
+    ;                                              \          |
+    ;                                                \        |
+    ;                                                  \  +---+---+
+    ;                                                    \|       |
+    ;                                                     +       |
+    ;                                                     |       |
+    ;                                                     +-------+
+    ;                                                         n3      
+    ;
     (:init
         
         ; L'agent "a1" est sur le noeud "n1"
@@ -131,6 +166,41 @@
 
     ; But Final du problème PursuitEvasion
     ;
+    ;
+    ;   Noeud couvert : n1, n2, n3, n4 et n5 (********)
+    ;   Noeud non couvert : X (-------)
+    ;
+    ;   Arc couvert : arc1_2, arc2_5, arc2_3, arc2_4 et arc3_4 (*********)
+    ;   Arc non couvert : X (-------)
+    ;
+    ;
+    ;                                n5
+    ;                            *********
+    ;                            |       |
+    ;                            |       |
+    ;                            |       |
+    ;                            ********* 
+    ;                                *   
+    ;                                *
+    ;                              arc2_5
+    ;                                *
+    ;                                *                         n4
+    ;   *********                *********                *********
+    ;   |       |                |   a1  |                |       |
+    ;   |       +**** arc1_2 ****+       +**** arc2_4 ****+       |
+    ;   |       |                |   a2  |*               |       |
+    ;   *********                *********  *             *********
+    ;       n1                       n2       *               *
+    ;                                           *             *                                
+    ;                                          arc2_3       arc3_4
+    ;                                              *          *
+    ;                                                *        *
+    ;                                                  *  *********
+    ;                                                    *|       |
+    ;                                                     +       |
+    ;                                                     |       |
+    ;                                                     *********
+    ;                                                         n3      
     ;
     (:goal
         
