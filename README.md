@@ -93,13 +93,11 @@ Pour compiler et exécuter le SAT Planning, vous devez vous placer dans le répe
 cd sat-planner
 ```
 
-Ensuite, exécutez le script make.sh en remplaçant `<nom_du_domain.pddl>` par le nom du fichier du domaine PDDL et `<nom_du_probleme.pddl>` par le nom du fichier du problème PDDL.
+Ensuite, exécutez le script make.sh en remplaçant `<nom_du_domain.pddl>` par le nom du fichier du domaine PDDL et `<nom_du_probleme.pddl>` par le nom du fichier du problème PDDL, tous deux situés dans le dossier `sat-planner/pddl`.
 
 ```bash
 ./make.sh <nom_du_domain.pddl> <nom_du_probleme.pddl>
 ```
-
-Certains domaines et problèmes peuvent être trouvés dans le dossier `sat-planner/pddl`.
 
 ([voir le contenu du make SatPlanner](/sat-planner/make.sh))
 
